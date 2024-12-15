@@ -1,9 +1,19 @@
-import { motion } from 'framer-motion';
-import { Helmet } from 'react-helmet-async';
 import { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Search } from 'lucide-react';
+import { Calendar, Search, Eye } from 'lucide-react';
+import { Link, useSearchParams } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
+import { PostsService, Post } from '@/api';
+import { toast } from 'sonner';
+import { format } from 'date-fns';
+import { tr } from 'date-fns/locale';
+import { Skeleton } from "@/components/ui/skeleton";
+import { PostImage } from '@/components/PostImage';
+import { PostCard, PostCardSkeleton } from '@/components/PostCard';
 import {
   Pagination,
   PaginationContent,
@@ -12,39 +22,46 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import { ProjectsService, type Project } from '@/api/services/projects';
-import { toast } from 'sonner';
-import { ProjectCard, ProjectCardSkeleton } from '@/components/ProjectCard';
 
-export default function Projects() {
+interface PaginationMeta {
+  current_page: number;
+  from: number;
+  last_page: number;
+  per_page: number;
+  to: number;
+  total: number;
+}
+
+export default function Posts() {
   const [searchParams, setSearchParams] = useSearchParams();
   const currentPage = Number(searchParams.get('page')) || 1;
   const searchTerm = searchParams.get('search') || '';
 
-  const [projects, setProjects] = useState<Project[]>([]);
+  const [posts, setPosts] = useState<Post[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [meta, setMeta] = useState<PaginationMeta | null>(null);
 
-  const loadProjects = async () => {
+  const loadPosts = async () => {
     try {
       setIsLoading(true);
-      const response = await ProjectsService.getAllProjects(currentPage, searchTerm);
-      setProjects(response.data);
+      const response = await PostsService.getAllPosts(currentPage, searchTerm);
+      setPosts(response.data);
       setMeta(response.meta);
     } catch (error) {
-      toast.error('Projeler yüklenirken bir hata oluştu');
+      toast.error('Yazılar yüklenirken bir hata oluştu');
     } finally {
       setIsLoading(false);
     }
   };
 
+  // Hem arama hem sayfa değişikliğini tek bir useEffect'te yönetelim
   useEffect(() => {
     const timer = setTimeout(() => {
-      loadProjects();
+      loadPosts();
     }, searchTerm ? 500 : 0); // Arama varsa debounce uygula
 
     return () => clearTimeout(timer);
-  }, [searchTerm, currentPage]);
+  }, [searchTerm, currentPage]); // Her iki değişikliği de dinle
 
   const handleSearch = (value: string) => {
     setIsLoading(true);
@@ -72,7 +89,7 @@ export default function Projects() {
   return (
     <>
       <Helmet>
-        <title>Projeler | Blog</title>
+        <title>Yazılar | Blog</title>
       </Helmet>
       <div className="space-y-8">
         <motion.div
@@ -81,17 +98,17 @@ export default function Projects() {
           className="text-center space-y-4"
         >
           <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-purple-500 bg-clip-text text-transparent">
-            Projelerim
+            Blog Yazıları
           </h1>
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            Son çalışmalarım ve kişisel projelerim.
+            Yazılım, teknoloji ve güncel konular hakkında yazılar.
           </p>
         </motion.div>
 
         <div className="relative max-w-sm mx-auto">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
           <Input
-            placeholder="Projelerde ara..."
+            placeholder="Yazılarda ara..."
             className="pl-9"
             value={searchTerm}
             onChange={(e) => handleSearch(e.target.value)}
@@ -101,12 +118,12 @@ export default function Projects() {
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {isLoading
             ? [...Array(6)].map((_, index) => (
-                <ProjectCardSkeleton key={index} />
+                <PostCardSkeleton key={index} />
               ))
-            : projects.map((project, index) => (
-                <ProjectCard
-                  key={project.id}
-                  project={project}
+            : posts.map((post, index) => (
+                <PostCard
+                  key={post.id}
+                  post={post}
                   index={index}
                 />
               ))}
@@ -145,4 +162,4 @@ export default function Projects() {
       </div>
     </>
   );
-}
+} 

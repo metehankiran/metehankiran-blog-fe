@@ -1,8 +1,14 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Home, User, Briefcase, Moon, Sun, Mail } from 'lucide-react';
+import { Home, User, Briefcase, Moon, Sun, Mail, MonitorDot, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTheme } from '@/components/theme-provider';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 export default function Navbar() {
   const { theme, setTheme } = useTheme();
@@ -36,6 +42,13 @@ export default function Navbar() {
               </Button>
             </Link>
             
+            <Link to="/posts">
+              <Button variant="ghost" className="flex items-center space-x-2">
+                <FileText className="h-5 w-5" />
+                <span>Yazılar</span>
+              </Button>
+            </Link>
+            
             <Link to="/projects">
               <Button variant="ghost" className="flex items-center space-x-2">
                 <Briefcase className="h-5 w-5" />
@@ -50,18 +63,33 @@ export default function Navbar() {
               </Button>
             </Link>
 
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-              className="ml-2"
-            >
-              {theme === 'dark' ? (
-                <Sun className="h-5 w-5" />
-              ) : (
-                <Moon className="h-5 w-5" />
-              )}
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  {theme === 'dark' ? (
+                    <Moon className="h-5 w-5" />
+                  ) : theme === 'light' ? (
+                    <Sun className="h-5 w-5" />
+                  ) : (
+                    <MonitorDot className="h-5 w-5" />
+                  )}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setTheme("light")}>
+                  <Sun className="mr-2 h-4 w-4" />
+                  <span>Açık</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setTheme("dark")}>
+                  <Moon className="mr-2 h-4 w-4" />
+                  <span>Koyu</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setTheme("system")}>
+                  <MonitorDot className="mr-2 h-4 w-4" />
+                  <span>Sistem</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </div>

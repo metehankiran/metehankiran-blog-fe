@@ -1,125 +1,167 @@
-import { useParams } from 'react-router-dom';
+import { useEffect, useState, useRef } from 'react';
+import { useParams, Link } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Github, ExternalLink, Calendar, User } from 'lucide-react';
-import { Helmet } from 'react-helmet-async';
+import { PostImage } from '@/components/PostImage';
+import { ProjectsService, type Project } from '@/api/services/projects';
+import { toast } from 'sonner';
+import { ExternalLink, Github, Calendar, Eye } from 'lucide-react';
+import { format } from 'date-fns';
+import { tr } from 'date-fns/locale';
 
 export default function ProjectDetail() {
-  const { id } = useParams();
+  const { slug } = useParams<{ slug: string }>();
+  const [project, setProject] = useState<Project | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const effectRan = useRef(false);
 
-  // In a real app, fetch project data based on id
-  const project = {
-    title: 'E-Commerce Platform',
-    description: 'A full-featured e-commerce platform built with React and Node.js',
-    longDescription: `
-      This project is a comprehensive e-commerce solution that provides a seamless
-      shopping experience for users. It includes features such as product catalog,
-      shopping cart, user authentication, payment processing, and order management.
+  useEffect(() => {
+    if (effectRan.current) return;
+
+    const loadProject = async () => {
+      if (!slug) {
+        console.error('Slug parameter is missing');
+        return;
+      }
+
+      try {
+        setIsLoading(true);
+        const response = await ProjectsService.getProjectBySlug(slug);
+        setProject(response);
+      } catch (error) {
+        toast.error('Proje detayları yüklenirken bir hata oluştu');
+        console.error('Error loading project:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
       
-      The frontend is built with React and uses modern practices like hooks and
-      context for state management. The backend is powered by Node.js and Express,
-      with MongoDB as the database.
-    `,
-    image: 'https://images.unsplash.com/photo-1557821552-17105176677c?q=80&w=2069',
-    technologies: ['React', 'Node.js', 'MongoDB', 'Stripe'],
-    github: '#',
-    demo: '#',
-    date: '2024-03-15',
-    author: 'John Doe',
-    features: [
-      'User authentication and authorization',
-      'Product catalog with search and filtering',
-      'Shopping cart functionality',
-      'Secure payment processing with Stripe',
-      'Order tracking and history',
-      'Admin dashboard for product management'
-    ]
-  };
+    if (slug) {
+      loadProject();
+    }
+
+    effectRan.current = true;
+  }, [slug]);
+
+  if (isLoading) {
+    return (
+      <div className="space-y-8">
+        <div className="h-[400px] bg-muted animate-pulse rounded-lg" />
+        <div className="space-y-4">
+          <div className="h-8 bg-muted animate-pulse rounded w-3/4" />
+          <div className="h-4 bg-muted animate-pulse rounded w-full" />
+          <div className="h-4 bg-muted animate-pulse rounded w-full" />
+          <div className="flex gap-2">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="h-6 w-16 bg-muted animate-pulse rounded" />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!project) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[50vh] space-y-4">
+        <h1 className="text-2xl font-bold">Proje Bulunamadı</h1>
+        <p className="text-muted-foreground">
+          Aradığınız proje mevcut değil veya kaldırılmış olabilir.
+        </p>
+        <Button asChild>
+          <Link to="/projects">Projelere Dön</Link>
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <>
       <Helmet>
-        <title>{project.title} | Blog</title>
+        <title>{project.name} | Projeler</title>
       </Helmet>
-      <div className="max-w-4xl mx-auto space-y-8">
+
+      <article className="max-w-4xl mx-auto space-y-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <img
-            src={project.image}
-            alt={project.title}
-            className="w-full h-[400px] object-cover rounded-lg"
-          />
+          <Card className="overflow-hidden">
+            <PostImage
+              src={project.image}
+              alt={project.name}
+              height="large"
+            />
+          </Card>
         </motion.div>
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
+          transition={{ delay: 0.1 }}
           className="space-y-6"
         >
-          <div className="space-y-4">
-            <h1 className="text-4xl font-bold">{project.title}</h1>
-            
-            <div className="flex flex-wrap gap-4 text-muted-foreground">
-              <div className="flex items-center">
-                <Calendar className="mr-2 h-4 w-4" />
-                {project.date}
-              </div>
-              <div className="flex items-center">
-                <User className="mr-2 h-4 w-4" />
-                {project.author}
-              </div>
+          <h1 className="text-4xl font-bold">{project.name}</h1>
+          
+          <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+            <div className="flex items-center gap-1">
+              <Calendar className="h-4 w-4" />
+              <time dateTime={project.created_at}>
+                {format(new Date(project.created_at), 'dd MMMM yyyy', { locale: tr })}
+              </time>
             </div>
-
-            <div className="flex flex-wrap gap-2">
-              {project.technologies.map(tech => (
-                <Badge key={tech} variant="secondary">
-                  {tech}
-                </Badge>
-              ))}
+            <div className="flex items-center gap-1">
+              <Eye className="h-4 w-4" />
+              <span>{project.views} görüntülenme</span>
             </div>
           </div>
 
-          <Card className="p-6">
-            <p className="text-muted-foreground whitespace-pre-line">
-              {project.longDescription}
-            </p>
-          </Card>
+          <div className="flex flex-wrap gap-2">
+            {JSON.parse(project.tags).map((tag: string) => (
+              <Badge key={tag} variant="secondary">
+                {tag}
+              </Badge>
+            ))}
+          </div>
+
+          <p className="text-lg text-muted-foreground leading-relaxed">
+            {project.short_description}
+          </p>
+
+          <div className="prose prose-neutral dark:prose-invert max-w-none">
+            {project.description.split('\n\n').map((paragraph, index) => (
+              <p key={index}>{paragraph}</p>
+            ))}
+          </div>
 
           <div className="space-y-4">
-            <h2 className="text-2xl font-semibold">Key Features</h2>
-            <ul className="space-y-2">
-              {project.features.map((feature, index) => (
-                <motion.li
-                  key={index}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.3 + index * 0.1 }}
-                  className="flex items-center space-x-2"
-                >
-                  <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-                  <span className="text-muted-foreground">{feature}</span>
-                </motion.li>
+            <h2 className="text-2xl font-semibold">Özellikler</h2>
+            <ul className="list-disc list-inside space-y-2 text-muted-foreground">
+              {JSON.parse(project.key_features).map((feature: string) => (
+                <li key={feature}>{feature}</li>
               ))}
             </ul>
           </div>
 
           <div className="flex gap-4">
-            <Button>
-              <Github className="mr-2 h-4 w-4" />
-              View Source
+            <Button asChild>
+              <a href={project.github_url} target="_blank" rel="noopener noreferrer">
+                <Github className="mr-2 h-4 w-4" />
+                GitHub'da İncele
+              </a>
             </Button>
-            <Button variant="secondary">
-              <ExternalLink className="mr-2 h-4 w-4" />
-              Live Demo
+            <Button asChild variant="secondary">
+              <a href={project.website_url} target="_blank" rel="noopener noreferrer">
+                <ExternalLink className="mr-2 h-4 w-4" />
+                Canlı Demo
+              </a>
             </Button>
           </div>
         </motion.div>
-      </div>
+      </article>
     </>
   );
 }

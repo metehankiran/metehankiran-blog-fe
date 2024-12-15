@@ -125,3 +125,38 @@
     background-attachment: fixed;
   }
 }
+
+/* Animasyonlu gradient arkaplan için keyframes */
+@keyframes gradient-animation {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Özel gradient sınıfı */
+.animated-gradient {
+  background: linear-gradient(
+    45deg,
+    hsl(var(--background)) 0%,
+    hsl(var(--background)) 40%,
+    rgba(168, 85, 247, 0.05) 50%, /* purple-500 ile uyumlu */
+    hsl(var(--background)) 60%,
+    hsl(var(--background)) 100%
+  );
+  background-size: 200% 200%;
+  animation: gradient-animation 15s ease infinite;
+}
+
+.static-gradient {
+  background: radial-gradient(
+    circle at top right,
+    rgba(168, 85, 247, 0.05), /* purple-500 ile uyumlu */
+    hsl(var(--background)) 50%
+  );
+}

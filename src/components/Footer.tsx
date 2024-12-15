@@ -29,6 +29,9 @@ export default function Footer() {
                 <a href="/about" className="hover:text-foreground transition">Hakkımda</a>
               </li>
               <li>
+                <a href="/posts" className="hover:text-foreground transition">Yazılar</a>
+              </li>
+              <li>
                 <a href="/projects" className="hover:text-foreground transition">Projeler</a>
               </li>
               <li>

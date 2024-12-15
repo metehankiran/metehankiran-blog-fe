@@ -11,6 +11,7 @@ import BlogPost from '@/pages/BlogPost';
 import Contact from '@/pages/Contact';
 import { HelmetProvider } from 'react-helmet-async';
 import ScrollToTop from '@/components/ScrollToTop';
+import Posts from '@/pages/Posts';
 
 function App() {
   return (
@@ -18,15 +19,16 @@ function App() {
       <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
         <Router>
           <ScrollToTop />
-          <div className="min-h-screen flex flex-col bg-gradient-radial">
+          <div className="min-h-screen flex flex-col animated-gradient">
             <Navbar />
             <main className="flex-1 container mx-auto px-4 py-8">
               <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/about" element={<About />} />
                 <Route path="/projects" element={<Projects />} />
-                <Route path="/project/:id" element={<ProjectDetail />} />
-                <Route path="/post/:id" element={<BlogPost />} />
+                <Route path="/project/:slug" element={<ProjectDetail />} />
+                <Route path="/posts" element={<Posts />} />
+                <Route path="/post/:slug" element={<BlogPost />} />
                 <Route path="/contact" element={<Contact />} />
               </Routes>
             </main>

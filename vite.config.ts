@@ -12,4 +12,13 @@ export default defineConfig({
   optimizeDeps: {
     exclude: ['lucide-react'],
   },
+  server: {
+    proxy: {
+      '/api': {
+        target: 'https://metehankiran-blog.test',
+        changeOrigin: true,
+        secure: false,
+      },
+    },
+  },
 });

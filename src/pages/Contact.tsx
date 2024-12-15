@@ -1,26 +1,105 @@
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Button } from '@/components/ui/button';
-import { Helmet } from 'react-helmet-async';
 import { Mail, Phone, MapPin, Send, Github, Linkedin, Twitter } from 'lucide-react';
-import { useState } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { toast } from 'sonner';
+import { ContactService, ContactForm } from '@/api/services/contact';
+
+// Form hata state'i için interface
+interface FormErrors {
+  name?: string;
+  email?: string;
+  subject?: string;
+  message?: string;
+}
 
 export default function Contact() {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errors, setErrors] = useState<FormErrors>({});
+  const [formData, setFormData] = useState<ContactForm>({
+    name: '',
+    email: '',
+    subject: '',
+    message: '',
+  });
+
+  const validateField = (name: string, value: string) => {
+    if (!value.trim()) {
+      return 'Bu alan zorunludur';
+    }
+    if (name === 'email' && value) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(value)) {
+        return 'Geçerli bir email adresi girin';
+      }
+    }
+    return '';
+  };
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value,
+    }));
+    
+    // Input değiştiğinde hata mesajını temizle
+    setErrors(prev => ({
+      ...prev,
+      [name]: '',
+    }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
-
-    // Burada form gönderme işlemi simüle ediliyor
-    await new Promise(resolve => setTimeout(resolve, 1000));
     
-    toast.success('Mesajınız başarıyla gönderildi!');
-    setIsSubmitting(false);
-    (e.target as HTMLFormElement).reset();
+    // Tüm alanları validate et
+    const newErrors: FormErrors = {};
+    Object.keys(formData).forEach((key) => {
+      const error = validateField(key, formData[key as keyof ContactForm]);
+      if (error) {
+        newErrors[key as keyof FormErrors] = error;
+      }
+    });
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      const response = await ContactService.sendMessage(formData);
+      
+      toast.success(response.message, {
+        position: 'top-right',
+        className: "data-[type=success]:bg-green-50 data-[type=success]:dark:bg-green-950 data-[type=success]:text-green-800 data-[type=success]:dark:text-green-200 data-[type=success]:border data-[type=success]:border-green-200 data-[type=success]:dark:border-green-800 font-medium text-base p-2 shadow-lg",
+        duration: 4000,
+      });
+      
+      // Formu sıfırla
+      setFormData({
+        name: '',
+        email: '',
+        subject: '',
+        message: '',
+      });
+    } catch (error) {
+      toast.error('Mesajınız gönderilirken bir hata oluştu', {
+        position: 'top-right',
+        className: "data-[type=error]:bg-red-50 data-[type=error]:dark:bg-red-950 data-[type=error]:text-red-800 data-[type=error]:dark:text-red-200 data-[type=error]:border data-[type=error]:border-red-200 data-[type=error]:dark:border-red-800 font-medium text-base p-2 shadow-lg",
+        duration: 4000,
+      });
+      console.error('Error sending message:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -59,9 +138,16 @@ export default function Contact() {
                   </label>
                   <Input
                     id="name"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleChange}
                     placeholder="Adınız Soyadınız"
-                    required
+                    disabled={isSubmitting}
+                    className={errors.name ? 'border-red-500' : ''}
                   />
+                  {errors.name && (
+                    <p className="text-sm text-red-500 mt-1">{errors.name}</p>
+                  )}
                 </div>
 
                 <div className="space-y-2">
@@ -70,10 +156,17 @@ export default function Contact() {
                   </label>
                   <Input
                     id="email"
+                    name="email"
                     type="email"
+                    value={formData.email}
+                    onChange={handleChange}
                     placeholder="ornek@email.com"
-                    required
+                    disabled={isSubmitting}
+                    className={errors.email ? 'border-red-500' : ''}
                   />
+                  {errors.email && (
+                    <p className="text-sm text-red-500 mt-1">{errors.email}</p>
+                  )}
                 </div>
 
                 <div className="space-y-2">
@@ -82,9 +175,16 @@ export default function Contact() {
                   </label>
                   <Input
                     id="subject"
+                    name="subject"
+                    value={formData.subject}
+                    onChange={handleChange}
                     placeholder="Mesajınızın konusu"
-                    required
+                    disabled={isSubmitting}
+                    className={errors.subject ? 'border-red-500' : ''}
                   />
+                  {errors.subject && (
+                    <p className="text-sm text-red-500 mt-1">{errors.subject}</p>
+                  )}
                 </div>
 
                 <div className="space-y-2">
@@ -93,15 +193,22 @@ export default function Contact() {
                   </label>
                   <Textarea
                     id="message"
+                    name="message"
+                    value={formData.message}
+                    onChange={handleChange}
                     placeholder="Mesajınızı buraya yazın..."
                     rows={6}
-                    required
+                    disabled={isSubmitting}
+                    className={errors.message ? 'border-red-500' : ''}
                   />
+                  {errors.message && (
+                    <p className="text-sm text-red-500 mt-1">{errors.message}</p>
+                  )}
                 </div>
 
                 <Button 
                   type="submit" 
-                  className="w-full"
+                  className="w-full" 
                   disabled={isSubmitting}
                 >
                   {isSubmitting ? (
