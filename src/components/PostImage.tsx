@@ -31,7 +31,7 @@ function generatePlaceholderImage(title: string, height: 'default' | 'large', th
   return (
     <div className={`w-full ${height === 'large' ? 'h-[400px]' : 'h-48'} ${bgColor} flex items-center justify-center p-4 transition-colors duration-200`}>
       <p className={`${textColor} text-center font-medium line-clamp-3 ${height === 'large' ? 'text-2xl' : 'text-lg'}`}>
-        {title}
+        {title} 
       </p>
     </div>
   );

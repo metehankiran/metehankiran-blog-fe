@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
+import { useSettings } from '@/hooks/useSettings';
 import { 
   Code, 
   Brain, 
@@ -17,16 +18,16 @@ import {
   GraduationCap,
   Github
 } from 'lucide-react';
-import { Skeleton } from "@/components/ui/skeleton";
-import { PostImage } from '@/components/PostImage';
 import { PostGrid } from '@/components/PostCard';
 import { useProjects } from '@/hooks/useProjects';
 import { ProjectCard, ProjectCardSkeleton } from '@/components/ProjectCard';
+import { CategorySlider } from '@/components/CategorySlider';
 
 export default function Home() {
   const [recentPosts, setRecentPosts] = useState<Post[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { projects, isLoading: projectsLoading } = useProjects(3);
+  const { data: settings } = useSettings();
 
   useEffect(() => {
     const loadRecentPosts = async () => {
@@ -72,7 +73,7 @@ export default function Home() {
 
           <h1 className="text-4xl md:text-6xl font-bold">
             <span className="bg-gradient-to-r from-primary to-purple-500 bg-clip-text text-transparent">
-              Merhaba, Ben [İsim]
+              Merhaba, Ben {settings?.site_author}
             </span>
           </h1>
 
@@ -125,6 +126,25 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Kategoriler Section */}
+      <section className="py-20">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="text-center space-y-4"
+        >
+          <h2 className="text-3xl font-bold">Kategoriler</h2>
+          <p className="text-muted-foreground max-w-2xl mx-auto">
+            İlgilendiğiniz konuya göre yazıları filtreleyebilirsiniz
+          </p>
+        </motion.div>
+
+        <div className="mt-8 mb-16">
+          <CategorySlider />
+        </div>
+      </section>
+
       {/* Son Yazılar Section */}
       <section className="py-20">
         <motion.div 
@@ -139,58 +159,56 @@ export default function Home() {
           </p>
         </motion.div>
 
-        <PostGrid posts={recentPosts} isLoading={isLoading} skeletonCount={3} />
-
-        <motion.div
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          className="text-center mt-12"
-        >
-          <Button size="lg" variant="outline" asChild>
-            <Link to="/posts">
-              Tüm Yazıları Gör
-              <ArrowRight className="ml-2 w-4 h-4" />
-            </Link>
-          </Button>
-        </motion.div>
+        {isLoading ? (
+          <PostGrid posts={[]} isLoading={true} skeletonCount={3} />
+        ) : recentPosts.length > 0 ? (
+          <PostGrid posts={recentPosts} isLoading={false} skeletonCount={3} />
+        ) : (
+          <div className="text-center py-12 space-y-4">
+            <div className="text-4xl">✍️</div>
+            <h3 className="text-lg font-semibold">Henüz Yazı Yok</h3>
+            <p className="text-muted-foreground">
+              Yakında yeni yazılar eklenecek.
+            </p>
+          </div>
+        )}
       </section>
 
       {/* Recent Projects Section */}
-      <section className="py-16">
-        <div className="container space-y-8">
-          <div className="text-center space-y-4">
-            <h2 className="text-3xl font-bold">Son Projelerim</h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
-              Üzerinde çalıştığım son projeler ve kişisel çalışmalarım.
+      <section className="py-20">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="text-center space-y-4 mb-12"
+        >
+          <h2 className="text-3xl font-bold">Son Projeler</h2>
+          <p className="text-muted-foreground max-w-2xl mx-auto">
+            Üzerinde çalıştığım son projeler
+          </p>
+        </motion.div>
+
+        {projectsLoading ? (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {[...Array(3)].map((_, index) => (
+              <ProjectCardSkeleton key={index} />
+            ))}
+          </div>
+        ) : projects && projects.length > 0 ? (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {projects.map((project, index) => (
+              <ProjectCard key={project.id} project={project} index={index} />
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-12 space-y-4">
+            <div className="text-4xl">🚀</div>
+            <h3 className="text-lg font-semibold">Henüz Proje Yok</h3>
+            <p className="text-muted-foreground">
+              Yakında yeni projeler eklenecek.
             </p>
           </div>
-
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {projectsLoading ? (
-              [...Array(3)].map((_, index) => (
-                <ProjectCardSkeleton key={index} />
-              ))
-            ) : (
-              projects.map((project, index) => (
-                <ProjectCard
-                  key={project.id}
-                  project={project}
-                  index={index}
-                />
-              ))
-            )}
-          </div>
-
-          <div className="text-center">
-            <Button asChild>
-              <Link to="/projects" className="gap-2">
-                Tüm Projeleri Gör
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-            </Button>
-          </div>
-        </div>
+        )}
       </section>
     </>
   );

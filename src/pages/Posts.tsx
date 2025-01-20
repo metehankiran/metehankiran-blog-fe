@@ -14,14 +14,7 @@ import { tr } from 'date-fns/locale';
 import { Skeleton } from "@/components/ui/skeleton";
 import { PostImage } from '@/components/PostImage';
 import { PostCard, PostCardSkeleton } from '@/components/PostCard';
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
+import { CustomPagination } from '@/components/CustomPagination';
 
 interface PaginationMeta {
   current_page: number;
@@ -115,49 +108,38 @@ export default function Posts() {
           />
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {isLoading
-            ? [...Array(6)].map((_, index) => (
-                <PostCardSkeleton key={index} />
-              ))
-            : posts.map((post, index) => (
-                <PostCard
-                  key={post.id}
-                  post={post}
-                  index={index}
-                />
+        {isLoading ? (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {[...Array(6)].map((_, index) => (
+              <PostCardSkeleton key={index} />
+            ))}
+          </div>
+        ) : posts.length > 0 ? (
+          <>
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {posts.map((post, index) => (
+                <PostCard key={post.id} post={post} index={index} />
               ))}
-        </div>
+            </div>
 
-        {meta && meta.last_page > 1 && (
-          <Pagination className="mt-8">
-            <PaginationContent>
-              <PaginationItem>
-                <PaginationPrevious 
-                  onClick={() => handlePageChange(currentPage - 1)}
-                  className={currentPage === 1 ? 'pointer-events-none opacity-50' : ''}
-                />
-              </PaginationItem>
-              
-              {Array.from({ length: meta.last_page }).map((_, index) => (
-                <PaginationItem key={index}>
-                  <PaginationLink
-                    onClick={() => handlePageChange(index + 1)}
-                    isActive={currentPage === index + 1}
-                  >
-                    {index + 1}
-                  </PaginationLink>
-                </PaginationItem>
-              ))}
-              
-              <PaginationItem>
-                <PaginationNext 
-                  onClick={() => handlePageChange(currentPage + 1)}
-                  className={currentPage === meta.last_page ? 'pointer-events-none opacity-50' : ''}
-                />
-              </PaginationItem>
-            </PaginationContent>
-          </Pagination>
+            {meta && (
+              <CustomPagination
+                currentPage={currentPage}
+                totalPages={meta.last_page}
+                onPageChange={handlePageChange}
+              />
+            )}
+          </>
+        ) : (
+          <div className="text-center py-12 space-y-4">
+            <div className="text-4xl">🔍</div>
+            <h3 className="text-lg font-semibold">Sonuç Bulunamadı</h3>
+            <p className="text-muted-foreground">
+              {searchTerm 
+                ? `"${searchTerm}" ile ilgili yazı bulunamadı.` 
+                : 'Henüz yazı bulunmuyor.'}
+            </p>
+          </div>
         )}
       </div>
     </>

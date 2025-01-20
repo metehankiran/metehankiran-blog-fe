@@ -1,7 +1,11 @@
 import { Separator } from '@/components/ui/separator';
 import { Github, Twitter, Linkedin } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { useSettings } from '@/hooks/useSettings';
 
 export default function Footer() {
+  const { data: settings } = useSettings();
+
   return (
     <footer className="border-t">
       <div className="container mx-auto px-4 py-8">
@@ -10,11 +14,11 @@ export default function Footer() {
           <div className="md:col-span-2 space-y-4">
             <h2 className="text-xl font-bold">
               <span className="bg-gradient-to-r from-primary to-purple-500 bg-clip-text text-transparent">
-                Blog
+                {settings?.site_name || 'Blog'}
               </span>
             </h2>
             <p className="text-sm text-muted-foreground">
-              Modern web teknolojileri, yazılım geliştirme ve yapay zeka hakkında güncel içerikler.
+              {settings?.site_description || 'Modern web teknolojileri, yazılım geliştirme ve yapay zeka hakkında güncel içerikler.'}
             </p>
           </div>
 
@@ -23,19 +27,22 @@ export default function Footer() {
             <h3 className="font-semibold">Hızlı Linkler</h3>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li>
-                <a href="/" className="hover:text-foreground transition">Ana Sayfa</a>
+                <Link to="/" className="hover:text-foreground transition">Ana Sayfa</Link>
               </li>
               <li>
-                <a href="/about" className="hover:text-foreground transition">Hakkımda</a>
+                <Link to="/about" className="hover:text-foreground transition">Hakkımda</Link>
               </li>
               <li>
-                <a href="/posts" className="hover:text-foreground transition">Yazılar</a>
+                <Link to="/categories" className="hover:text-foreground transition">Kategoriler</Link>
               </li>
               <li>
-                <a href="/projects" className="hover:text-foreground transition">Projeler</a>
+                <Link to="/posts" className="hover:text-foreground transition">Yazılar</Link>
               </li>
               <li>
-                <a href="/contact" className="hover:text-foreground transition">İletişim</a>
+                <Link to="/projects" className="hover:text-foreground transition">Projeler</Link>
+              </li>
+              <li>
+                <Link to="/contact" className="hover:text-foreground transition">İletişim</Link>
               </li>
             </ul>
           </div>
@@ -44,9 +51,8 @@ export default function Footer() {
           <div className="space-y-4">
             <h3 className="font-semibold">İletişim</h3>
             <ul className="space-y-2 text-sm text-muted-foreground">
-              <li>iletisim@example.com</li>
-              <li>+90 (555) 123 45 67</li>
-              <li>İstanbul, Türkiye</li>
+              <li>{settings?.contact_email || 'iletisim@example.com'}</li>
+              <li>{settings?.site_author || 'Blog Yazarı'}</li>
             </ul>
           </div>
         </div>
@@ -55,7 +61,7 @@ export default function Footer() {
         
         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-sm text-muted-foreground">
-            © 2024 Blog. Tüm hakları saklıdır.
+            © 2024 {settings?.site_name || 'Blog'}. Tüm hakları saklıdır.
           </p>
           
           <div className="flex space-x-4">
